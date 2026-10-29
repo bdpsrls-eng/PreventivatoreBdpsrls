@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preventivatore Punto Metallico - BDP</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        h2 { color: var(--primary); margin-top: 0; text-align: center; }
+        .subtitle { text-align: center; color: var(--text-muted); font-size: 0.9em; margin-bottom: 24px; }
+
+        .hidden { display: none !important; }
+
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-weight: 600; font-size: 0.85em; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1em;
+            box-sizing: border-box;
+            background: #f1f5f9;
+        }
+        input:focus { outline: 2px solid var(--primary); background: #fff; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+        .result-box {
+            background: #eff6ff;
+            border: 2px dashed var(--primary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 24px;
+            text-align: center;
+        }
+        .price { font-size: 2em; font-weight: 800; color: var(--primary); margin: 8px 0; }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+        .btn:hover { background: var(--primary-hover); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- SCHERMATA LOGIN PIN -->
+    <div id="pin-screen">
+        <h2>Area Riservata BDP</h2>
+        <p class="subtitle">Inserisci il PIN cliente fornito</p>
+        <div class="form-group">
+            <input type="password" id="pin-input" placeholder="Inserisci PIN" style="text-align: center; font-size: 1.5em; letter-spacing: 4px;">
+        </div>
+        <button class="btn" onclick="verificaPin()">Accedi al Calcolatore</button>
+        <p id="pin-error" style="color: red; text-align: center; font-size: 0.9em; margin-top: 10px; display: none;">PIN non valido</p>
+    </div>
+
+    <!-- CALCOLATORE PUNTO METALLICO -->
+    <div id="calculator-screen" class="hidden">
+        <h2>Preventivo Punto Metallico - BDP</h2>
+        <p class="subtitle" id="welcome-client">Benvenuto</p>
+
+        <div class="form-group">
+            <label>Descrizione Lavoro / Titolo</label>
+            <input type="text" id="descrizione" placeholder="es. Catalogo Autunno 2026">
+        </div>
+
+        <div class="form-group">
+            <label>Tiratura (N. Copie)</label>
+            <input type="number" id="tiratura" placeholder="es. 1000" oninput="calcola()">
+        </div>
+
+        <label style="margin-top: 16px;">Composizione Segnature del Fascicolo</label>
+        <div class="grid-3" style="margin-bottom: 12px;">
+            <div><label>16mi</label><input type="number" id="n16" value="0" min="0" oninput="calcola()"></div>
+            <div><label>8vi</label><input type="number" id="n8" value="0" min="0" oninput="calcola()"></div>
+            <div><label>4ti</label><input type="number" id="n4" value="0" min="0" oninput="calcola()"></div>
+        </div>
+        <div class="grid-3">
+            <div><label>12mo</label><input type="number" id="n12" value="0" min="0" oninput="calcola()"></div>
+            <div><label>24mo</label><input type="number" id="n24" value="0" min="0" oninput="calcola()"></div>
+            <div><label>32mo</label><input type="number" id="n32" value="0" min="0" oninput="calcola()"></div>
+        </div>
+
+        <div class="form-group" style="margin-top: 16px;">
+            <label><input type="checkbox" id="haCopertina" onchange="calcola()"> Presente Copertina</label>
+        </div>
+
+        <!-- IMBALLI -->
+        <div class="grid-2" style="margin-top: 16px;">
+            <div>
+                <label>Copie per Pacco Termo</label>
+                <input type="number" id="copiePacco" value="0" oninput="calcola()">
+            </div>
+            <div>
+                <label>Copie per Scatola</label>
+                <input type="number" id="copieScatola" value="0" oninput="calcola()">
+            </div>
+        </div>
+
+        <!-- RISULTATO -->
+        <div class="result-box">
+            <span style="font-size: 0.9em; color: var(--text-muted);">Prezzo Totale Calcolato</span>
+            <div class="price" id="total-price">€ 0,00</div>
+            <span style="font-size: 0.85em; color: var(--text-muted);" id="unit-price">€ 0,000 / copia</span>
+        </div>
+
+        <button class="btn" onclick="inviaPreventivo()">Conferma e Invia in Produzione</button>
+    </div>
+</div>
+
+<script>
+    // PIN di prova associati ai clienti
+    const CLIENT_PINS = {
+        "1234": "GF Printing",
+        "5678": "Tipografia Rossi",
+        "9999": "Cliente Test"
+    };
+
+    let currentClient = "";
+
+    function verificaPin() {
+        const pin = document.getElementById("pin-input").value;
+        if (CLIENT_PINS[pin]) {
+            currentClient = CLIENT_PINS[pin];
+            document.getElementById("pin-screen").classList.add("hidden");
+            document.getElementById("calculator-screen").classList.remove("hidden");
+            document.getElementById("welcome-client").innerText = "Cliente: " + currentClient;
+        } else {
+            document.getElementById("pin-error").style.display = "block";
+        }
+    }
+
+    function calcola() {
+        const tiratura = parseInt(document.getElementById("tiratura").value) || 0;
+        if (tiratura <= 0) {
+            document.getElementById("total-price").innerText = "€ 0,00";
+            document.getElementById("unit-price").innerText = "€ 0,000 / copia";
+            return;
+        }
+
+        const n16 = parseInt(document.getElementById("n16").value) || 0;
+        const n8 = parseInt(document.getElementById("n8").value) || 0;
+        const n4 = parseInt(document.getElementById("n4").value) || 0;
+        const n12 = parseInt(document.getElementById("n12").value) || 0;
+        const n24 = parseInt(document.getElementById("n24").value) || 0;
+        const n32 = parseInt(document.getElementById("n32").value) || 0;
+        const haCopertina = document.getElementById("haCopertina").checked;
+
+        // Calcolo Avviamenti
+        let avviamentoPiega = (n16 > 0 ? 25 : 0) + (n8 > 0 ? 25 : 0) + (n4 > 0 ? 25 : 0) + 
+                              (n12 > 0 ? 25 : 0) + (n24 > 0 ? 25 : 0) + (n32 > 0 ? 25 : 0) + 
+                              (haCopertina ? 25 : 0);
+        let avviamentoPM = 80.0;
+        let avviamentiTotali = avviamentoPiega + avviamentoPM;
+
+        // Calcolo Costi Piega
+        let costoPiega = (n16 * 0.0069 * tiratura) + 
+                         (n8 * 0.0040 * tiratura) + 
+                         (n12 * 0.0055 * tiratura) + 
+                         (n24 * 0.0100 * tiratura) + 
+                         (n32 * 0.0138 * tiratura) + 
+                         (haCopertina ? 0.0019 * tiratura : 0);
+
+        // Calcolo Punto Metallico (Spessore)
+        let totSegnaturePM = n16 + n8 + (n4 > 0 ? 1 : 0) + n12 + n24 + n32 + (haCopertina ? 1 : 0);
+        if (totSegnaturePM < 1) totSegnaturePM = 1;
+
+        let tariffaPM = 0.0053;
+        if (totSegnaturePM === 2) tariffaPM = 0.0068;
+        else if (totSegnaturePM === 3) tariffaPM = 0.0083;
+        else if (totSegnaturePM === 4) tariffaPM = 0.0098;
+        else if (totSegnaturePM === 5) tariffaPM = 0.0113;
+        else if (totSegnaturePM >= 6) tariffaPM = 0.0128;
+
+        let costoPM = tiratura * tariffaPM;
+
+        // Costi Imballi
+        let costoImballi = 0;
+        const copiePacco = parseInt(document.getElementById("copiePacco").value) || 0;
+        const copieScatola = parseInt(document.getElementById("copieScatola").value) || 0;
+
+        if (copiePacco > 0) costoImballi += Math.ceil(tiratura / copiePacco) * 0.20;
+        if (copieScatola > 0) costoImballi += Math.ceil(tiratura / copieScatola) * 0.90;
+
+        // Totale Finale
+        let costoTotale = avviamentiTotali + costoPiega + costoPM + costoImballi;
+        let costoUnitario = costoTotale / tiratura;
+
+        document.getElementById("total-price").innerText = "€ " + costoTotale.toFixed(2).replace('.', ',');
+        document.getElementById("unit-price").innerText = "€ " + costoUnitario.toFixed(3).replace('.', ',') + " / copia";
+    }
+
+    function inviaPreventivo() {
+        alert("Preventivo confermato! Il lavoro BDP è stato registrato per il cliente: " + currentClient);
+    }
+</script>
+
+</body>
+</html>
