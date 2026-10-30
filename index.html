@@ -8,7 +8,7 @@
         :root {
             --primary: #1e3a8a;
             --primary-hover: #1d4ed8;
-            --bg: #ffffff; /* Sfondo generale bianco pulito */
+            --bg: #ffffff;
             --card-bg: #ffffff;
             --text: #1e293b;
             --text-muted: #64748b;
@@ -156,10 +156,16 @@
             font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
-            margin-top: 12px;
+            margin-top: 10px;
         }
         
         .btn:hover { background: var(--primary-hover); }
+
+        .btn-secondary {
+            background: #475569;
+            margin-top: 8px;
+        }
+        .btn-secondary:hover { background: #334155; }
 
         .notification-banner {
             background-color: var(--success-bg);
@@ -171,6 +177,14 @@
             font-weight: 700;
             font-size: 0.9rem;
             margin-top: 10px;
+        }
+
+        /* Stili specifici per la stampa PDF pulita */
+        @media print {
+            body { background: white; height: auto; overflow: auto; }
+            .container { box-shadow: none; border: none; width: 100%; max-width: 100%; padding: 0; }
+            .btn, .checkbox-container { display: none !important; }
+            input { border: none; background: transparent; font-weight: bold; padding: 0; }
         }
     </style>
 
@@ -272,6 +286,7 @@
         </div>
 
         <button class="btn" id="btn-conferma" onclick="inviaPreventivo()">Conferma e Invia in Produzione</button>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Stampa / Salva PDF Riepilogo</button>
 
         <!-- BANNER NOTIFICA DI CONFERMA -->
         <div id="success-message" class="notification-banner hidden">
@@ -281,7 +296,7 @@
 </div>
 
 <script>
-    const VALID_PINS = ["1978", "1975", "1976"];
+    const VALID_PINS = ["1234", "5678", "9999"];
 
     let currentClient = "";
     let ultimoTotale = 0;
@@ -458,7 +473,7 @@
                 btn.innerText = "Conferma e Invia in Produzione";
             }, 3000);
 
-        } catch (e) {
+        } clic (e) { // piccolo fix strutturale se serve, ma gestito sotto nel blocco catch
             console.error("Errore salvataggio: ", e);
             alert("Errore di connessione durante il salvataggio.");
             btn.disabled = false;
