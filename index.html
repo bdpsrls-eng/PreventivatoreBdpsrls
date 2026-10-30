@@ -98,7 +98,7 @@
     <!-- CALCOLATORE PUNTO METALLICO -->
     <div id="calculator-screen" class="hidden">
         <h2>Preventivo Punto Metallico - BDP</h2>
-        <p class="subtitle" id="welcome-client">Benvenuto</p>
+        <p class="subtitle" id="welcome-client">Area Clienti BDP</p>
 
         <div class="form-group">
             <label>Descrizione Lavoro / Titolo</label>
@@ -150,11 +150,11 @@
 </div>
 
 <script>
-    // PIN di prova associati ai clienti
+    // PIN di accesso autorizzati (puoi modificare i codici o i nomi a piacimento)
     const CLIENT_PINS = {
-        "1234": "GF Printing",
-        "5678": "Tipografia Rossi",
-        "9999": "Cliente Test"
+        "1234": "Cliente Autorizzato",
+        "5678": "Cliente BDP",
+        "9999": "Amministrazione BDP"
     };
 
     let currentClient = "";
@@ -165,7 +165,7 @@
             currentClient = CLIENT_PINS[pin];
             document.getElementById("pin-screen").classList.add("hidden");
             document.getElementById("calculator-screen").classList.remove("hidden");
-            document.getElementById("welcome-client").innerText = "Cliente: " + currentClient;
+            document.getElementById("welcome-client").innerText = "Accesso effettuato - BDP";
         } else {
             document.getElementById("pin-error").style.display = "block";
         }
@@ -232,7 +232,7 @@
     }
 
     function inviaPreventivo() {
-        alert("Preventivo confermato! Il lavoro BDP è stato registrato per il cliente: " + currentClient);
+        alert("Preventivo confermato e registrato con successo per BDP.");
     }
 </script>
 
