@@ -13,6 +13,7 @@
             --text: #0f172a;
             --text-muted: #64748b;
             --border: #e2e8f0;
+            --success: #16a34a;
         }
 
         body {
@@ -79,6 +80,18 @@
             margin-top: 16px;
         }
         .btn:hover { background: var(--primary-hover); }
+
+        /* Banner Notifica Inviato */
+        .notification-banner {
+            background-color: #dcfce7;
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 16px;
+        }
     </style>
 
     <!-- Firebase SDKs -->
@@ -177,15 +190,16 @@
             <span style="font-size: 0.85em; color: var(--text-muted);" id="unit-price">€ 0,000 / copia</span>
         </div>
 
-        <button class="btn" onclick="inviaPreventivo()">Conferma e Invia in Produzione</button>
+        <button class="btn" id="btn-conferma" onclick="inviaPreventivo()">Conferma e Invia in Produzione</button>
+
+        <!-- BANNER NOTIFICA DI CONFERMA -->
+        <div id="success-message" class="notification-banner hidden">
+            ✅ Preventivo registrato con successo in produzione!
+        </div>
     </div>
 </div>
 
 <script>
-    // NUMERI WHATSAPP CONFIGURATI
-    const NUMERO_WHATSAPP_1 = "393357866100";
-    const NUMERO_WHATSAPP_2 = "393480163976";
-
     // PIN validi autorizzati
     const VALID_PINS = ["1234", "5678", "9999"];
 
@@ -273,10 +287,15 @@
             return;
         }
 
+        const btn = document.getElementById("btn-conferma");
+        btn.disabled = true;
+        btn.innerText = "Salvataggio in corso...";
+
         const datiPreventivo = {
             cliente: currentClient,
             descrizione: descrizione,
             tiratura: tiratura,
+            copie: tiratura,
             segnature: {
                 n16: parseInt(document.getElementById("n16").value) || 0,
                 n8: parseInt(document.getElementById("n8").value) || 0,
@@ -291,30 +310,36 @@
                 copieScatola: parseInt(document.getElementById("copieScatola").value) || 0
             },
             totaleEuro: Number(ultimoTotale.toFixed(2)),
+            prezzoTotale: Number(ultimoTotale.toFixed(2)),
             costoUnitarioEuro: Number(ultimoCostoUnitario.toFixed(3)),
+            prezzoUnitario: Number(ultimoCostoUnitario.toFixed(3)),
+            approvato: false,
+            data: new Date().toLocaleDateString('it-IT'),
             dataCreazione: window.serverTimestamp()
         };
 
         try {
-            // 1. Salva su Firebase
+            // Salva direttamente su Firebase
             await window.addDoc(window.collection(window.db, "preventivi"), datiPreventivo);
 
-            // 2. Prepara il testo del messaggio WhatsApp
-            const testoMessaggio = `Nuovo Preventivo BDP!%0A` +
-                `*Cliente:* ${encodeURIComponent(currentClient)}%0A` +
-                `*Titolo:* ${encodeURIComponent(descrizione)}%0A` +
-                `*Tiratura:* ${tiratura} copie%0A` +
-                `*Totale:* € ${ultimoTotale.toFixed(2).replace('.', ',')}`;
+            // Mostra notifica verde a schermo
+            const banner = document.getElementById("success-message");
+            banner.classList.remove("hidden");
 
-            alert("Preventivo salvato! Verranno aperte due chat WhatsApp per inviare la notifica a entrambi i numeri.");
-            
-            // 3. Apre WhatsApp per entrambi i numeri in automatico
-            window.open(`https://wa.me/${NUMERO_WHATSAPP_1}?text=${testoMessaggio}`, '_blank');
-            window.open(`https://wa.me/${NUMERO_WHATSAPP_2}?text=${testoMessaggio}`, '_blank');
+            btn.innerText = "Confermato!";
+
+            // Pulisce la notifica dopo 4 secondi
+            setTimeout(() => {
+                banner.classList.add("hidden");
+                btn.disabled = false;
+                btn.innerText = "Conferma e Invia in Produzione";
+            }, 4000);
 
         } catch (e) {
-            console.error("Errore durante il salvataggio: ", e);
-            alert("Errore durante il salvataggio del preventivo. Controlla la connessione.");
+            console.error("Errore salvataggio: ", e);
+            alert("Errore di connessione durante il salvataggio.");
+            btn.disabled = false;
+            btn.innerText = "Conferma e Invia in Produzione";
         }
     }
 </script>
