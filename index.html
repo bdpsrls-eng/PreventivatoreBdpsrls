@@ -42,7 +42,7 @@
 
         .form-group { margin-bottom: 16px; }
         label { display: block; font-weight: 600; font-size: 0.85em; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; }
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], input[type="password"] {
             width: 100%;
             padding: 12px;
             border: 1px solid var(--border);
@@ -108,15 +108,23 @@
 <body>
 
 <div class="container">
-    <!-- SCHERMATA LOGIN PIN -->
+    <!-- SCHERMATA LOGIN PIN E NOME -->
     <div id="pin-screen">
         <h2>Area Riservata BDP</h2>
-        <p class="subtitle">Inserisci il PIN cliente fornito</p>
+        <p class="subtitle">Inserisci il tuo Nome e il PIN cliente</p>
+        
         <div class="form-group">
-            <input type="password" id="pin-input" placeholder="Inserisci PIN" style="text-align: center; font-size: 1.5em; letter-spacing: 4px;">
+            <label>Nome Cliente / Azienda</label>
+            <input type="text" id="nome-cliente-input" placeholder="es. Tipografia Rossi">
         </div>
+
+        <div class="form-group">
+            <label>PIN di Accesso</label>
+            <input type="password" id="pin-input" placeholder="PIN" style="text-align: center; font-size: 1.5em; letter-spacing: 4px;">
+        </div>
+
         <button class="btn" onclick="verificaPin()">Accedi al Calcolatore</button>
-        <p id="pin-error" style="color: red; text-align: center; font-size: 0.9em; margin-top: 10px; display: none;">PIN non valido</p>
+        <p id="pin-error" style="color: red; text-align: center; font-size: 0.9em; margin-top: 10px; display: none;">Inserisci un nome valido e il PIN corretto</p>
     </div>
 
     <!-- CALCOLATORE PUNTO METALLICO -->
@@ -174,26 +182,26 @@
 </div>
 
 <script>
-    // INSERISCI QUI IL TUO NUMERO DI CELLULARE CON PREFISSO 39 (es. 393331234567)
-    const NUMERO_WHATSAPP_AZIENDALE = "393357866100";
+    // INSERISCI QUI I DUE NUMERI DI TELEFONO CON PREFISSO 39
+    const NUMERO_WHATSAPP_1 = "393357866100";
+    const NUMERO_WHATSAPP_2 = "393480163976";
 
-    const CLIENT_PINS = {
-        "1234": "Cliente Autorizzato",
-        "5678": "Cliente BDP",
-        "9999": "Amministrazione BDP"
-    };
+    // PIN validi autorizzati
+    const VALID_PINS = ["1234", "5678", "9999"];
 
     let currentClient = "";
     let ultimoTotale = 0;
     let ultimoCostoUnitario = 0;
 
     function verificaPin() {
-        const pin = document.getElementById("pin-input").value;
-        if (CLIENT_PINS[pin]) {
-            currentClient = CLIENT_PINS[pin];
+        const nomeInput = document.getElementById("nome-cliente-input").value.trim();
+        const pinInput = document.getElementById("pin-input").value.trim();
+
+        if (nomeInput !== "" && VALID_PINS.includes(pinInput)) {
+            currentClient = nomeInput;
             document.getElementById("pin-screen").classList.add("hidden");
             document.getElementById("calculator-screen").classList.remove("hidden");
-            document.getElementById("welcome-client").innerText = "Accesso effettuato - " + currentClient;
+            document.getElementById("welcome-client").innerText = "Benvenuto, " + currentClient;
         } else {
             document.getElementById("pin-error").style.display = "block";
         }
@@ -269,7 +277,7 @@
             cliente: currentClient,
             descrizione: descrizione,
             tiratura: tiratura,
-            segandole: {
+            segnature: {
                 n16: parseInt(document.getElementById("n16").value) || 0,
                 n8: parseInt(document.getElementById("n8").value) || 0,
                 n4: parseInt(document.getElementById("n4").value) || 0,
@@ -298,10 +306,11 @@
                 `*Tiratura:* ${tiratura} copie%0A` +
                 `*Totale:* € ${ultimoTotale.toFixed(2).replace('.', ',')}`;
 
-            alert("Preventivo registrato su Firebase! Clicca OK per inviare la notifica via WhatsApp.");
+            alert("Preventivo salvato! Verranno aperte due chat WhatsApp per inviare la notifica a entrambi i numeri.");
             
-            // 3. Apre WhatsApp con il messaggio pronto
-            window.open(`https://wa.me/${NUMERO_WHATSAPP_AZIENDALE}?text=${testoMessaggio}`, '_blank');
+            // 3. Apre WhatsApp per entrambi i numeri in automatico
+            window.open(`https://wa.me/${NUMERO_WHATSAPP_1}?text=${testoMessaggio}`, '_blank');
+            window.open(`https://wa.me/${NUMERO_WHATSAPP_2}?text=${testoMessaggio}`, '_blank');
 
         } catch (e) {
             console.error("Errore durante il salvataggio: ", e);
