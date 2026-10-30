@@ -449,6 +449,7 @@
             prezzoTotale: Number(ultimoTotale.toFixed(2)),
             costoUnitarioEuro: Number(ultimoCostoUnitario.toFixed(3)),
             prezzoUnitario: Number(ultimoCostoUnitario.toFixed(3)),
+            origine: "Web", // <-- Distinzione automatica per i preventivi web
             approvato: false,
             data: new Date().toLocaleDateString('it-IT'),
             dataCreazione: window.serverTimestamp()
