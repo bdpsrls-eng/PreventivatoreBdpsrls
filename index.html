@@ -291,24 +291,54 @@
         btn.disabled = true;
         btn.innerText = "Salvataggio in corso...";
 
+        const n16 = parseInt(document.getElementById("n16").value) || 0;
+        const n8 = parseInt(document.getElementById("n8").value) || 0;
+        const n4 = parseInt(document.getElementById("n4").value) || 0;
+        const n12 = parseInt(document.getElementById("n12").value) || 0;
+        const n24 = parseInt(document.getElementById("n24").value) || 0;
+        const n32 = parseInt(document.getElementById("n32").value) || 0;
+        const haCopertina = document.getElementById("haCopertina").checked;
+
+        let avviamentoPiega = (n16 > 0 ? 25 : 0) + (n8 > 0 ? 25 : 0) + (n4 > 0 ? 25 : 0) + 
+                              (n12 > 0 ? 25 : 0) + (n24 > 0 ? 25 : 0) + (n32 > 0 ? 25 : 0) + 
+                              (haCopertina ? 25 : 0);
+        let avviamentiTotali = avviamentoPiega + 80.0;
+
+        let costoPiegaCalc = (n16 * 0.0069 * tiratura) + 
+                             (n8 * 0.0040 * tiratura) + 
+                             (n12 * 0.0055 * tiratura) + 
+                             (n24 * 0.0100 * tiratura) + 
+                             (n32 * 0.0138 * tiratura) + 
+                             (haCopertina ? 0.0019 * tiratura : 0);
+
+        let totSegnaturePM = n16 + n8 + (n4 > 0 ? 1 : 0) + n12 + n24 + n32 + (haCopertina ? 1 : 0);
+        if (totSegnaturePM < 1) totSegnaturePM = 1;
+        let tariffaPM = 0.0053;
+        if (totSegnaturePM === 2) tariffaPM = 0.0068;
+        else if (totSegnaturePM === 3) tariffaPM = 0.0083;
+        else if (totSegnaturePM === 4) tariffaPM = 0.0098;
+        else if (totSegnaturePM === 5) tariffaPM = 0.0113;
+        else if (totSegnaturePM >= 6) tariffaPM = 0.0128;
+
+        let costoPMCalc = tiratura * tariffaPM;
+
         const datiPreventivo = {
             cliente: currentClient,
             descrizione: descrizione,
             tiratura: tiratura,
             copie: tiratura,
-            segnature: {
-                n16: parseInt(document.getElementById("n16").value) || 0,
-                n8: parseInt(document.getElementById("n8").value) || 0,
-                n4: parseInt(document.getElementById("n4").value) || 0,
-                n12: parseInt(document.getElementById("n12").value) || 0,
-                n24: parseInt(document.getElementById("n24").value) || 0,
-                n32: parseInt(document.getElementById("n32").value) || 0,
-                haCopertina: document.getElementById("haCopertina").checked
-            },
-            imballi: {
-                copiePacco: parseInt(document.getElementById("copiePacco").value) || 0,
-                copieScatola: parseInt(document.getElementById("copieScatola").value) || 0
-            },
+            segnature: { n16, n8, n4, n12, n24, n32, haCopertina },
+            costoAvviamento: Number(avviamentiTotali.toFixed(2)),
+            costoPiega: Number(costoPiegaCalc.toFixed(2)),
+            costoPuntoMetallico: Number(costoPMCalc.toFixed(2)),
+            costoForoCalendarioTotale: 0.0,
+            costoPacchiTermo: 0.0,
+            numPacchiTermo: 0,
+            costoScatole: 0.0,
+            numScatole: 0,
+            importoMaggiorazione: 0.0,
+            percentualeMaggiorazione: 0.0,
+            tempoStimatoMinuti: 30.0,
             totaleEuro: Number(ultimoTotale.toFixed(2)),
             prezzoTotale: Number(ultimoTotale.toFixed(2)),
             costoUnitarioEuro: Number(ultimoCostoUnitario.toFixed(3)),
@@ -319,16 +349,12 @@
         };
 
         try {
-            // Salva direttamente su Firebase
             await window.addDoc(window.collection(window.db, "preventivi"), datiPreventivo);
 
-            // Mostra notifica verde a schermo
             const banner = document.getElementById("success-message");
             banner.classList.remove("hidden");
-
             btn.innerText = "Confermato!";
 
-            // Pulisce la notifica dopo 4 secondi
             setTimeout(() => {
                 banner.classList.add("hidden");
                 btn.disabled = false;
