@@ -473,7 +473,7 @@
                 btn.innerText = "Conferma e Invia in Produzione";
             }, 3000);
 
-        } clic (e) { // piccolo fix strutturale se serve, ma gestito sotto nel blocco catch
+        } catch (e) {
             console.error("Errore salvataggio: ", e);
             alert("Errore di connessione durante il salvataggio.");
             btn.disabled = false;
