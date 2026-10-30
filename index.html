@@ -80,6 +80,31 @@
         }
         .btn:hover { background: var(--primary-hover); }
     </style>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzpNSClUwAP1MnhgYmzMwizxyF-rGvgaI",
+            authDomain: "preventivibdp.firebaseapp.com",
+            projectId: "preventivibdp",
+            storageBucket: "preventivibdp.firebasestorage.app",
+            messagingSenderId: "134800681378",
+            appId: "1:134800681378:web:23e6fce5abe18943ad6afb",
+            measurementId: "G-SRKC4H48LM"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Rendiamo db e funzioni accessibili globalmente nello script
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.serverTimestamp = serverTimestamp;
+    </script>
 </head>
 <body>
 
@@ -150,14 +175,15 @@
 </div>
 
 <script>
-    // PIN di accesso autorizzati (puoi modificare i codici o i nomi a piacimento)
     const CLIENT_PINS = {
-        "1234": "Colorshade",
-        "1975": "Cliente BDP",
-        "1976": "Amministrazione BDP"
+        "1234": "Cliente Autorizzato",
+        "5678": "Cliente BDP",
+        "9999": "Amministrazione BDP"
     };
 
     let currentClient = "";
+    let ultimoTotale = 0;
+    let ultimoCostoUnitario = 0;
 
     function verificaPin() {
         const pin = document.getElementById("pin-input").value;
@@ -165,7 +191,7 @@
             currentClient = CLIENT_PINS[pin];
             document.getElementById("pin-screen").classList.add("hidden");
             document.getElementById("calculator-screen").classList.remove("hidden");
-            document.getElementById("welcome-client").innerText = "Accesso effettuato - BDP";
+            document.getElementById("welcome-client").innerText = "Accesso effettuato - " + currentClient;
         } else {
             document.getElementById("pin-error").style.display = "block";
         }
@@ -174,6 +200,8 @@
     function calcola() {
         const tiratura = parseInt(document.getElementById("tiratura").value) || 0;
         if (tiratura <= 0) {
+            ultimoTotale = 0;
+            ultimoCostoUnitario = 0;
             document.getElementById("total-price").innerText = "€ 0,00";
             document.getElementById("unit-price").innerText = "€ 0,000 / copia";
             return;
@@ -187,14 +215,12 @@
         const n32 = parseInt(document.getElementById("n32").value) || 0;
         const haCopertina = document.getElementById("haCopertina").checked;
 
-        // Calcolo Avviamenti
         let avviamentoPiega = (n16 > 0 ? 25 : 0) + (n8 > 0 ? 25 : 0) + (n4 > 0 ? 25 : 0) + 
                               (n12 > 0 ? 25 : 0) + (n24 > 0 ? 25 : 0) + (n32 > 0 ? 25 : 0) + 
                               (haCopertina ? 25 : 0);
         let avviamentoPM = 80.0;
         let avviamentiTotali = avviamentoPiega + avviamentoPM;
 
-        // Calcolo Costi Piega
         let costoPiega = (n16 * 0.0069 * tiratura) + 
                          (n8 * 0.0040 * tiratura) + 
                          (n12 * 0.0055 * tiratura) + 
@@ -202,7 +228,6 @@
                          (n32 * 0.0138 * tiratura) + 
                          (haCopertina ? 0.0019 * tiratura : 0);
 
-        // Calcolo Punto Metallico (Spessore)
         let totSegnaturePM = n16 + n8 + (n4 > 0 ? 1 : 0) + n12 + n24 + n32 + (haCopertina ? 1 : 0);
         if (totSegnaturePM < 1) totSegnaturePM = 1;
 
@@ -215,7 +240,6 @@
 
         let costoPM = tiratura * tariffaPM;
 
-        // Costi Imballi
         let costoImballi = 0;
         const copiePacco = parseInt(document.getElementById("copiePacco").value) || 0;
         const copieScatola = parseInt(document.getElementById("copieScatola").value) || 0;
@@ -223,16 +247,52 @@
         if (copiePacco > 0) costoImballi += Math.ceil(tiratura / copiePacco) * 0.20;
         if (copieScatola > 0) costoImballi += Math.ceil(tiratura / copieScatola) * 0.90;
 
-        // Totale Finale
-        let costoTotale = avviamentiTotali + costoPiega + costoPM + costoImballi;
-        let costoUnitario = costoTotale / tiratura;
+        ultimoTotale = avviamentiTotali + costoPiega + costoPM + costoImballi;
+        ultimoCostoUnitario = ultimoTotale / tiratura;
 
-        document.getElementById("total-price").innerText = "€ " + costoTotale.toFixed(2).replace('.', ',');
-        document.getElementById("unit-price").innerText = "€ " + costoUnitario.toFixed(3).replace('.', ',') + " / copia";
+        document.getElementById("total-price").innerText = "€ " + ultimoTotale.toFixed(2).replace('.', ',');
+        document.getElementById("unit-price").innerText = "€ " + ultimoCostoUnitario.toFixed(3).replace('.', ',') + " / copia";
     }
 
-    function inviaPreventivo() {
-        alert("Preventivo confermato e registrato con successo per BDP.");
+    async function inviaPreventivo() {
+        const descrizione = document.getElementById("descrizione").value.trim();
+        const tiratura = parseInt(document.getElementById("tiratura").value) || 0;
+
+        if (!descrizione || tiratura <= 0) {
+            alert("Inserisci una descrizione e una tiratura valida prima di confermare.");
+            return;
+        }
+
+        const datiPreventivo = {
+            cliente: currentClient,
+            descrizione: descrizione,
+            tiratura: tiratura,
+            segandole: {
+                n16: parseInt(document.getElementById("n16").value) || 0,
+                n8: parseInt(document.getElementById("n8").value) || 0,
+                n4: parseInt(document.getElementById("n4").value) || 0,
+                n12: parseInt(document.getElementById("n12").value) || 0,
+                n24: parseInt(document.getElementById("n24").value) || 0,
+                n32: parseInt(document.getElementById("n32").value) || 0,
+                haCopertina: document.getElementById("haCopertina").checked
+            },
+            imballi: {
+                copiePacco: parseInt(document.getElementById("copiePacco").value) || 0,
+                copieScatola: parseInt(document.getElementById("copieScatola").value) || 0
+            },
+            totaleEuro: Number(ultimoTotale.toFixed(2)),
+            costoUnitarioEuro: Number(ultimoCostoUnitario.toFixed(3)),
+            dataCreazione: window.serverTimestamp()
+        };
+
+        try {
+            // Salva dentro la collezione "preventivi" su Firestore
+            await window.addDoc(window.collection(window.db, "preventivi"), datiPreventivo);
+            alert("Preventivo salvato e inviato con successo nel database BDP!");
+        } catch (e) {
+            console.error("Errore durante il salvataggio: ", e);
+            alert("Errore durante il salvataggio del preventivo. Controlla la connessione.");
+        }
     }
 </script>
 
