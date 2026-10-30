@@ -322,6 +322,24 @@
 
         let costoPMCalc = tiratura * tariffaPM;
 
+        // Calcolo imballi dettagliato per Android
+        const copiePaccoInput = parseInt(document.getElementById("copiePacco").value) || 0;
+        const copieScatolaInput = parseInt(document.getElementById("copieScatola").value) || 0;
+
+        let numPacchiTermoCalc = 0;
+        let costoPacchiTermoCalc = 0;
+        if (copiePaccoInput > 0) {
+            numPacchiTermoCalc = Math.ceil(tiratura / copiePaccoInput);
+            costoPacchiTermoCalc = numPacchiTermoCalc * 0.20;
+        }
+
+        let numScatoleCalc = 0;
+        let costoScatoleCalc = 0;
+        if (copieScatolaInput > 0) {
+            numScatoleCalc = Math.ceil(tiratura / copieScatolaInput);
+            costoScatoleCalc = numScatoleCalc * 0.90;
+        }
+
         const datiPreventivo = {
             cliente: currentClient,
             descrizione: descrizione,
@@ -332,10 +350,10 @@
             costoPiega: Number(costoPiegaCalc.toFixed(2)),
             costoPuntoMetallico: Number(costoPMCalc.toFixed(2)),
             costoForoCalendarioTotale: 0.0,
-            costoPacchiTermo: 0.0,
-            numPacchiTermo: 0,
-            costoScatole: 0.0,
-            numScatole: 0,
+            costoPacchiTermo: Number(costoPacchiTermoCalc.toFixed(2)),
+            numPacchiTermo: numPacchiTermoCalc,
+            costoScatole: Number(costoScatoleCalc.toFixed(2)),
+            numScatole: numScatoleCalc,
             importoMaggiorazione: 0.0,
             percentualeMaggiorazione: 0.0,
             tempoStimatoMinuti: 30.0,
@@ -352,7 +370,7 @@
             await window.addDoc(window.collection(window.db, "preventivi"), datiPreventivo);
 
             const banner = document.getElementById("success-message");
-            banner.classList.remove("hidden");
+            banner.classList.et ? banner.classList.remove("hidden") : banner.style.display = "block";
             btn.innerText = "Confermato!";
 
             setTimeout(() => {
