@@ -179,7 +179,6 @@
             margin-top: 10px;
         }
 
-        /* Stili specifici per la stampa PDF pulita */
         @media print {
             body { background: white; height: auto; overflow: auto; }
             .container { box-shadow: none; border: none; width: 100%; max-width: 100%; padding: 0; }
@@ -187,35 +186,10 @@
             input { border: none; background: transparent; font-weight: bold; padding: 0; }
         }
     </style>
-
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCzpNSClUwAP1MnhgYmzMwizxyF-rGvgaI",
-            authDomain: "preventivibdp.firebaseapp.com",
-            projectId: "preventivibdp",
-            storageBucket: "preventivibdp.firebasestorage.app",
-            messagingSenderId: "134800681378",
-            appId: "1:134800681378:web:23e6fce5abe18943ad6afb",
-            measurementId: "G-SRKC4H48LM"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        window.db = db;
-        window.collection = collection;
-        window.addDoc = addDoc;
-        window.serverTimestamp = serverTimestamp;
-    </script>
 </head>
 <body>
 
 <div class="container">
-    <!-- SCHERMATA LOGIN PIN E NOME -->
     <div id="pin-screen">
         <h2>Area Riservata BDP</h2>
         <p class="subtitle">Inserisci il tuo Nome e il PIN cliente</p>
@@ -234,7 +208,6 @@
         <p id="pin-error" style="color: #dc2626; text-align: center; font-size: 0.85rem; font-weight: 600; margin-top: 8px; display: none;">Nome non valido o PIN errato</p>
     </div>
 
-    <!-- CALCOLATORE PUNTO METALLICO -->
     <div id="calculator-screen" class="hidden">
         <h2>Preventivo Punto Metallico</h2>
         <p class="subtitle" id="welcome-client">Area Clienti BDP</p>
@@ -278,22 +251,43 @@
             </div>
         </div>
 
-        <!-- RISULTATO -->
         <div class="result-box">
             <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Prezzo Totale Calcolato</span>
             <div class="price" id="total-price">€ 0,00</div>
             <span style="font-size: 0.82rem; font-weight: 600; color: var(--primary);" id="unit-price">€ 0,000 / copia</span>
         </div>
 
-        <button class="btn" id="btn-conferma" onclick="inviaPreventivo()">Conferma e Invia in Produzione</button>
+        <button class="btn" id="btn-conferma" onclick="inviaPreventivo()">Salva e Invia Preventivo</button>
         <button class="btn btn-secondary" onclick="window.print()">🖨️ Stampa / Salva PDF Riepilogo</button>
 
-        <!-- BANNER NOTIFICA DI CONFERMA -->
         <div id="success-message" class="notification-banner hidden">
-            ✅ Preventivo registrato con successo!
+            ✅ Preventivo salvato e inviato con successo!
         </div>
     </div>
 </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCzpNSClUwAP1MnhgYmzMwizxyF-rGvgaI",
+        authDomain: "preventivibdp.firebaseapp.com",
+        projectId: "preventivibdp",
+        storageBucket: "preventivibdp.firebasestorage.app",
+        messagingSenderId: "134800681378",
+        appId: "1:134800681378:web:23e6fce5abe18943ad6afb",
+        measurementId: "G-SRKC4H48LM"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.collection = collection;
+    window.addDoc = addDoc;
+    window.serverTimestamp = serverTimestamp;
+</script>
 
 <script>
     const VALID_PINS = ["1234", "5678", "9999"];
@@ -373,7 +367,7 @@
         document.getElementById("unit-price").innerText = "€ " + ultimoCostoUnitario.toFixed(3).replace('.', ',') + " / copia";
     }
 
-    async function inviaPreventivo() {
+    window.inviaPreventivo = async function() {
         const descrizione = document.getElementById("descrizione").value.trim();
         const tiratura = parseInt(document.getElementById("tiratura").value) || 0;
 
@@ -465,19 +459,19 @@
 
             const banner = document.getElementById("success-message");
             banner.classList.remove("hidden");
-            btn.innerText = "Confermato!";
+            btn.innerText = "Inviato!";
 
             setTimeout(() => {
                 banner.classList.add("hidden");
                 btn.disabled = false;
-                btn.innerText = "Conferma e Invia in Produzione";
+                btn.innerText = "Salva e Invia Preventivo";
             }, 3000);
 
         } catch (e) {
             console.error("Errore salvataggio: ", e);
             alert("Errore di connessione durante il salvataggio.");
             btn.disabled = false;
-            btn.innerText = "Conferma e Invia in Produzione";
+            btn.innerText = "Salva e Invia Preventivo";
         }
     }
 </script>
