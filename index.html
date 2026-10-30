@@ -99,7 +99,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Rendiamo db e funzioni accessibili globalmente nello script
         window.db = db;
         window.collection = collection;
         window.addDoc = addDoc;
@@ -175,10 +174,13 @@
 </div>
 
 <script>
+    // INSERISCI QUI IL TUO NUMERO DI CELLULARE CON PREFISSO 39 (es. 393331234567)
+    const NUMERO_WHATSAPP_AZIENDALE = "393357866100";
+
     const CLIENT_PINS = {
-        "1234": "Coloschade",
+        "1234": "Cliente Autorizzato",
         "5678": "Cliente BDP",
-        "1975": "Amministrazione BDP"
+        "9999": "Amministrazione BDP"
     };
 
     let currentClient = "";
@@ -286,9 +288,21 @@
         };
 
         try {
-            // Salva dentro la collezione "preventivi" su Firestore
+            // 1. Salva su Firebase
             await window.addDoc(window.collection(window.db, "preventivi"), datiPreventivo);
-            alert("Preventivo salvato e inviato con successo nel database BDP!");
+
+            // 2. Prepara il testo del messaggio WhatsApp
+            const testoMessaggio = `Nuovo Preventivo BDP!%0A` +
+                `*Cliente:* ${encodeURIComponent(currentClient)}%0A` +
+                `*Titolo:* ${encodeURIComponent(descrizione)}%0A` +
+                `*Tiratura:* ${tiratura} copie%0A` +
+                `*Totale:* € ${ultimoTotale.toFixed(2).replace('.', ',')}`;
+
+            alert("Preventivo registrato su Firebase! Clicca OK per inviare la notifica via WhatsApp.");
+            
+            // 3. Apre WhatsApp con il messaggio pronto
+            window.open(`https://wa.me/${NUMERO_WHATSAPP_AZIENDALE}?text=${testoMessaggio}`, '_blank');
+
         } catch (e) {
             console.error("Errore durante il salvataggio: ", e);
             alert("Errore durante il salvataggio del preventivo. Controlla la connessione.");
