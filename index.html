@@ -179,11 +179,17 @@
             margin-top: 10px;
         }
 
+        /* Intestazione visibile solo in stampa / PDF */
+        .print-header { display: none; }
+
         @media print {
             body { background: white; height: auto; overflow: auto; }
             .container { box-shadow: none; border: none; width: 100%; max-width: 100%; padding: 0; }
             .btn, .checkbox-container { display: none !important; }
             input { border: none; background: transparent; font-weight: bold; padding: 0; }
+            
+            /* Attiva l'intestazione formale nel PDF stampato */
+            .print-header { display: block !important; margin-bottom: 20px; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; }
         }
     </style>
 </head>
@@ -209,6 +215,13 @@
     </div>
 
     <div id="calculator-screen" class="hidden">
+        <!-- Blocco intestazione visibile esclusivamente nel PDF / Stampa -->
+        <div class="print-header">
+            <h3 style="margin: 0; color: #1e3a8a; font-size: 1.2rem;">BDP - Preventivi e Lavorazioni</h3>
+            <p style="margin: 6px 0 2px 0; font-size: 0.9rem;"><strong>Cliente:</strong> <span id="print-cliente">-</span></p>
+            <p style="margin: 2px 0 0 0; font-size: 0.9rem;"><strong>N. Preventivo:</strong> <span id="print-num">-</span> &nbsp;|&nbsp; <strong>Data:</strong> <span id="print-data">-</span></p>
+        </div>
+
         <h2>Preventivo Punto Metallico</h2>
         <p class="subtitle" id="welcome-client">Area Clienti BDP</p>
 
@@ -258,7 +271,7 @@
         </div>
 
         <button class="btn" id="btn-conferma" onclick="inviaPreventivo()">Salva e Invia Preventivo</button>
-        <button class="btn btn-secondary" onclick="window.print()">🖨️ Stampa / Salva PDF Riepilogo</button>
+        <button class="btn btn-secondary" onclick="stampaPdfRiepilogo()">🖨️ Stampa / Salva PDF Riepilogo</button>
 
         <div id="success-message" class="notification-banner hidden">
             ✅ Preventivo salvato e inviato con successo!
@@ -367,6 +380,23 @@
         document.getElementById("unit-price").innerText = "€ " + ultimoCostoUnitario.toFixed(3).replace('.', ',') + " / copia";
     }
 
+    // Funzione dedicata per gestire intestazione e nome file PDF personalizzato
+    function stampaPdfRiepilogo() {
+        const cliente = currentClient || "Cliente";
+        const numeroPreventivo = "WEB-" + Math.floor(1000 + Math.random() * 9000);
+        
+        // Popola l'intestazione stampata sul PDF
+        document.getElementById("print-cliente").innerText = cliente;
+        document.getElementById("print-num").innerText = numeroPreventivo;
+        document.getElementById("print-data").innerText = new Date().toLocaleDateString('it-IT');
+
+        // Imposta il titolo della pagina: il browser userà questo come nome predefinito del file PDF!
+        document.title = `Preventivo_${cliente}_${numeroPreventivo}`.replace(/\s+/g, '_');
+
+        // Avvia la finestra di stampa / salvataggio PDF
+        window.print();
+    }
+
     window.inviaPreventivo = async function() {
         const descrizione = document.getElementById("descrizione").value.trim();
         const tiratura = parseInt(document.getElementById("tiratura").value) || 0;
@@ -449,7 +479,7 @@
             prezzoTotale: Number(ultimoTotale.toFixed(2)),
             costoUnitarioEuro: Number(ultimoCostoUnitario.toFixed(3)),
             prezzoUnitario: Number(ultimoCostoUnitario.toFixed(3)),
-            origine: "Web", // <-- Distinzione automatica per i preventivi web
+            origine: "Web",
             approvato: false,
             data: new Date().toLocaleDateString('it-IT'),
             dataCreazione: window.serverTimestamp()
